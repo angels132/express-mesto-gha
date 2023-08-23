@@ -24,4 +24,3 @@ app.use(bodyParser.json());
 app.use(router);
 
 app.listen(PORT, () => {});
-
