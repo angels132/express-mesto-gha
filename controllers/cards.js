@@ -26,10 +26,11 @@ const deleteCard = (req, res) => {
     });
 };
 
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.status(201).send(user))
+const createCard = (req, res) => {
+  const owner = req.user._id;
+  const { name, link } = req.body;
+  Card.create({ name, link, owner })
+    .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({
