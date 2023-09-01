@@ -1,26 +1,45 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
+const { errors } = require('celebrate');
+const errorHandler = require('./middlewares/error-handler');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+const router = require('./routes');
+
+const { PORT = 3000 } = process.env;
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
+  useUnifiedTopology: true,
+  autoIndex: true,
 });
 
 const app = express();
-app.use((req, res, next) => {
-  req.user = {
-    _id: '60617ed3ec53713071be52ae',
-  };
 
-  next();
-});
-const router = require('./routes');
+app.use(cors());
 
-const { PORT = 3000 } = process.env;
+app.use(helmet());
+app.use(limiter);
 
 app.use(bodyParser.json());
-app.use(router);
 
-app.listen(PORT, () => {});
+app.use(requestLogger);
+app.use(router);
+app.use(errorLogger);
+
+app.use(errors());
+
+app.use(errorHandler);
+
+app.listen(PORT, () => { });
